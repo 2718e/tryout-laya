@@ -1,0 +1,18 @@
+# Environments
+.venv/
+.venv-agent-container/
+
+# uv
+.uv-cache/
+.uv-python/
+
+# Secrets and machine-local settings
+.env
+
+# Downloaded checkpoints live in .cache/huggingface by default
+.cache/
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/

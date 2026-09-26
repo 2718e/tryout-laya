@@ -1,0 +1,22 @@
+[project]
+name = "tryout-laya"
+version = "0.1.0"
+description = "Local HTTP service for the Laya System 1 decision engine"
+readme = "README.md"
+requires-python = "==3.12.*"
+
+# torch ships no cp313 wheels, so the interpreter is pinned to 3.12.
+dependencies = ["laya==0.3.20"]
+
+[project.optional-dependencies]
+serve = ["laya[serve]==0.3.20"]
+
+[dependency-groups]
+dev = ["pytest>=8", "httpx>=0.27"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

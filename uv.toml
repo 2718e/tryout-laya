@@ -1,0 +1,4 @@
+# The agent container's $HOME is read-only, so uv's default cache location is unusable.
+# Keeping the cache inside the project also means the host and the container never
+# share one, which is the same reason the environment directory is overridden.
+cache-dir = ".uv-cache"
