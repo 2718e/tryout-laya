@@ -6,7 +6,14 @@ readme = "README.md"
 requires-python = "==3.12.*"
 
 # torch ships no cp313 wheels, so the interpreter is pinned to 3.12.
-dependencies = ["laya==0.3.20"]
+#
+# torch is a direct dependency only so the CUDA build below can be selected. It
+# comes in through laya regardless; naming it here is what makes `[tool.uv.sources]`
+# apply, because that table is ignored for transitive dependencies.
+#
+# The window keeps the lockfile honest: cu124's newest wheel is 2.6.0, and 2.7+
+# drops every architecture below sm_70 (the GTX 1070 is sm_61).
+dependencies = ["laya==0.3.20", "torch>=2.6,<2.7"]
 
 [project.optional-dependencies]
 serve = ["laya[serve]==0.3.20"]
@@ -14,8 +21,23 @@ serve = ["laya[serve]==0.3.20"]
 [dependency-groups]
 dev = ["pytest>=8", "httpx>=0.27"]
 
+# CUDA 12.4 wheels, the oldest CUDA 12 build available, which is what a driver
+# reporting 12040 supports. `explicit` keeps it out of the default resolution, so
+# PyPI stays the index for everything else.
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu124" }
+
 [tool.uv]
 package = false
+# The container's $HOME is read-only, so uv's default cache location is unusable.
+# Keeping it here also means the host and the container never share a cache, which
+# is the same reason UV_PROJECT_ENVIRONMENT points away from .venv.
+cache-dir = ".uv-cache"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

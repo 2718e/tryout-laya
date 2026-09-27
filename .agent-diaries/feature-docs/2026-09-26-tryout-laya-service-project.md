@@ -61,13 +61,35 @@ cannot be written and inference returns 500. The Makefile exports `HF_HOME`, whi
 `make serve` is the documented entry point. On a host with a writable `$HOME` this does not
 bite.
 
-**torch resolves to the CUDA build.** `torch==2.14.0+cu130` plus the `nvidia-*` wheels
-installed on their own. It runs fine on CPU (`DEVICE=auto` falls back), at the cost of disk
-in the image. On the host, a CPU-only torch index is possible if disk matters; it is not
-worth complicating the default lockfile for.
+**torch is pinned to the CUDA 12.4 build for a GTX 1070.** The initial lock took
+`torch==2.14.0+cu130` from PyPI, which needs a 580+ driver; the host reports `12040`
+(CUDA 12.4), so CUDA initialisation failed and torch fell back to CPU. The project now pins
+`torch>=2.6,<2.7` from `https://download.pytorch.org/whl/cu124`, giving `2.6.0+cu124` and
+`nvidia-*-cu12` wheels. The upper bound is not arbitrary: 2.6 is the last release whose CUDA
+wheels carry Pascal cubins (`sm_50 sm_60 ...`, verified with `cuobjdump`), and 2.7+ drops
+everything below `sm_70`. The GTX 1070 is `sm_61`, which runs the `sm_60` cubins because SASS
+is forward-compatible within a major compute capability. Full write-up in
+`docs/gpu-support.md`.
+
+Two uv behaviours cost time here and are worth remembering:
+
+1. `[tool.uv.sources]` is ignored for **transitive** dependencies. Torch arrives through
+   `laya`, so the index override only took effect once `torch` was named as a direct
+   dependency.
+2. uv ignores `[tool.uv]` in `pyproject.toml` when a `uv.toml` exists beside it. The cache
+   setting was living in `uv.toml`, which silently disabled the new index config. `uv.toml`
+   is deleted and `cache-dir` now sits under `[tool.uv]` alongside everything else.
+
+`torch-backend = "cu124"` was also tried and does not work for this project: uv documents it
+as respected only by `uv pip` commands, and `uv lock`/`uv sync` ignore it silently.
 
 **`transformers` resolved to 5.17.0**, a major version above the `>=4.48.0` floor that
-`laya` declares. Verified working end to end on 0.3.20 before committing to it.
+`laya` declares. Verified working end to end on 0.3.20, and again on the 2.6.0 downgrade,
+before committing to it.
+
+The user rewrote the root `README.md` as their own experimentation notes, so the GPU
+documentation went to `docs/gpu-support.md` instead. The global instruction not to modify
+the root README stands.
 
 ## Fine-tuning readiness
 
@@ -76,18 +98,28 @@ the README records that fine-tuning should arrive as a separate optional extra p
 `training/` directory. `Router` accepts a local directory wherever it accepts a Hub id, so
 a fine-tuned checkpoint drops in without server changes.
 
+The Pascal pin is the main cost to training: it caps torch at 2.6, and some training stacks
+already expect 2.7+. Training on a rented GPU with a modern stack while serving on the 1070
+is the likely split. Pascal also has no bfloat16, so training must use fp16 or fp32.
+
 ## Verification
 
 - `uv sync --all-extras --group dev` resolves and installs; `make test` passes in a clean
-  shell without any manual environment setup.
+  shell without any manual environment setup, including after the torch 2.6 downgrade.
 - `tests/test_server.py` boots the FastAPI app through `TestClient`, loads the English
   checkpoint, and asserts a real `noul` probability over the HTTP route, plus health and 422
   paths.
 - `make serve` was run for real and checked with curl: `/health` reports all three
-  checkpoints loaded on `cpu`; the README's request returns `billing` / 1.7722 / 0.879; a
-  Hindi state routes to `multilingual`; `"model": "laya-typed-decisions"` routes to
-  `typed-decisions`; a malformed question type returns 422 with a readable message; and with
-  `LAYA_API_KEY` set, a missing or wrong bearer token returns 401.
+  checkpoints loaded; the billing request returns `billing` / 1.7722 / 0.879; a Hindi state
+  routes to `multilingual`; `"model": "laya-typed-decisions"` routes to `typed-decisions`; a
+  malformed question type returns 422 with a readable message; and with `LAYA_API_KEY` set, a
+  missing or wrong bearer token returns 401.
+- The torch downgrade was validated beyond resolution: a throwaway environment with
+  `torch 2.6.0` + `laya 0.3.20` + `transformers 5.17.0` ran a real prediction correctly, and
+  `cuobjdump` confirmed the Pascal cubins are present in the wheel.
 - `make test` emits a `RuntimeWarning` from `laya/router.py` that the shipped checkpoint
   temperatures are invalid and are clamped, which is the model card's over-confidence
-  caveat showing up in practice. The README keeps the calibration warning.
+  caveat showing up in practice.
+- The container has no GPU, so the CUDA path itself is unverified; the host is the only
+  place it can be confirmed. `/health`'s `device` field is not evidence, because it echoes
+  the configured string rather than the device torch resolved.
