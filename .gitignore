@@ -12,6 +12,9 @@
 # Downloaded checkpoints live in .cache/huggingface by default
 .cache/
 
+# Recorded request database (LAYA_REQUESTS_DB)
+.logs/
+
 __pycache__/
 *.py[cod]
 .pytest_cache/

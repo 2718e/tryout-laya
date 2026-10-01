@@ -17,6 +17,10 @@ LAYA_API_KEY ?=
 # "no authentication", which is the intended localhost default.
 export LAYA_API_KEY
 
+# Loaded by -include .env above, so they must be exported to reach the process.
+# Empty values mean "no request logging" and "no request storage".
+export LAYA_REQUESTS_DB LAYA_DEBUG_REQUESTS LAYA_DEBUG_MAX_CHARS
+
 UV     := uv
 HF_HOME ?= $(CURDIR)/.cache/huggingface
 export HF_HOME
@@ -31,6 +35,9 @@ help:
 	@echo "serve    run the HTTP server on http://$(HOST):$(PORT)"
 	@echo "test     pytest (the smoke test loads a checkpoint on first run)"
 	@echo "clean    drop the local model cache and uv cache"
+	@echo ""
+	@echo "Request logs: LAYA_DEBUG_REQUESTS=1 prints each request, and"
+	@echo "LAYA_REQUESTS_DB=.logs/requests.db stores metadata-bearing requests."
 
 install:
 	$(UV) sync $(UV_FLAGS)
@@ -45,7 +52,7 @@ serve: install
 	LAYA_HOST=$(HOST) LAYA_PORT=$(PORT) LAYA_DEVICE=$(DEVICE) \
 	LAYA_MODELS=$(MODELS) LAYA_PRELOAD=$(PRELOAD) LAYA_THREADS=$(THREADS) \
 	LAYA_API_KEY=$(LAYA_API_KEY) \
-	$(UV) run laya-serve
+	$(UV) run python -m tryout_laya.server
 
 test: install
 	$(UV) run pytest
