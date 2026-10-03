@@ -42,3 +42,6 @@ cache-dir = ".uv-cache"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+# The project is not an installed package, so the tests import tryout_laya from
+# the project root.
+pythonpath = ["."]
