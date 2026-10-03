@@ -68,7 +68,10 @@ class RequestObserverMiddleware:
         response_body = captured.json()
 
         self._log(scope, started, captured.status, request_body, metadata, response_body)
-        if client_id is not None and captured.status == 200:
+        if captured.status == 200:
+            client_id_with_default = client_id
+            if client_id_with_default is None:
+                client_id_with_default = "unknownn"
             self._record(request_body, metadata, client_id, response_body)
 
     def _record(self, request_body, metadata, client_id, response_body):

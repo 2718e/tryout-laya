@@ -2,42 +2,4 @@
 
 Trying to setup and run / serve a locally running system 1 decision model.
 
-
-## Command to experiment with
-
-Lets see what this does with some non-default questions
-
-I thought the youtube sponsor section filtering was interesting. There might be other uses for AI content filtering. What about trying to filter stories out of recipe websites?
-
-
- ```sh
-curl -s localhost:8000/v1/systemone -H 'Content-Type: application/json' -d '{
-  "state": "Back in the day when I was living in the outback I used to love eating bush tucker.",
-  "questions": {
-    "isStory": {
-      "type": "noul",
-      "instructions": "Does this look like part of a story or anecdote?"
-    },
-    "isRecipe": {
-      "type": "noul",
-      "instructions": "Does this look like part of a recipe or other food or drink preparation instructions?"
-    }
-  }
-}'
-```
-
- ```sh
-curl -s localhost:8000/v1/systemone -H 'Content-Type: application/json' -d '{
-  "state": "Put the oats in a blender, add the protein powder and berries.",
-  "questions": {
-    "isStory": {
-      "type": "noul",
-      "instructions": "Does this look like part of a story or anecdote?"
-    },
-    "isRecipe": {
-      "type": "noul",
-      "instructions": "Does this look like part of a recipe or other food or drink preparation instructions?"
-    }
-  }
-}'
-```
+## 
