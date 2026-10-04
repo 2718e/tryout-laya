@@ -14,7 +14,7 @@ from laya.serve import MAX_BODY_BYTES
 from .recorder import RequestRecord, canonical_input_hash, utc_now_iso
 from .request_log import format_exchange
 
-_logger = logging.getLogger("tryout_laya.requests")
+_logger = logging.getLogger("src.requests")
 
 _MISSING = object()
 _METADATA_NOT_OBJECT = "'metadata' must be a JSON object"

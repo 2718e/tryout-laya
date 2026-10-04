@@ -1,6 +1,6 @@
 """Entry point: the upstream Laya app wrapped in the request observer.
 
-``uv run python -m tryout_laya.server`` is what ``make serve`` runs.
+``uv run python -m src.server`` is what ``make serve`` runs.
 """
 import logging
 import os
@@ -22,7 +22,7 @@ def build_observed_app(router: Optional[Any] = None):
 def _configure_request_logging() -> None:
     level = logging.getLevelNamesMapping().get(
         os.environ.get("LAYA_LOG_LEVEL", "info").upper(), logging.INFO)
-    logger = logging.getLogger("tryout_laya.requests")
+    logger = logging.getLogger("src.requests")
     logger.setLevel(level)
     if not logger.handlers:
         handler = logging.StreamHandler()

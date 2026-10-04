@@ -13,8 +13,8 @@ import pytest
 from fastapi.testclient import TestClient
 from laya.serve import MAX_BODY_BYTES
 
-from tryout_laya.recorder import canonical_input_hash
-from tryout_laya.server import build_observed_app
+from src.recorder import canonical_input_hash
+from src.server import build_observed_app
 
 STATE = "Put the oats in a blender, add the protein powder and berries."
 QUESTIONS = {"isRecipe": {"type": "noul", "instructions": "Is this a recipe?"}}
@@ -80,7 +80,7 @@ def read_rows(db_path):
 
 
 def request_log_records(caplog):
-    return [record for record in caplog.records if record.name == "tryout_laya.requests"]
+    return [record for record in caplog.records if record.name == "src.requests"]
 
 
 def test_metadata_absent_changes_nothing(build):
@@ -203,7 +203,7 @@ def test_content_hash_groups_repeated_inputs(build):
 
 def test_debug_on_logs_the_exchange(build, caplog):
     app, router, db_path = build(debug=True)
-    with caplog.at_level(logging.INFO, logger="tryout_laya.requests"):
+    with caplog.at_level(logging.INFO, logger="src.requests"):
         with TestClient(app) as client:
             client.post("/v1/systemone",
                         json=request_body(metadata={"clientId": "videosvc"}))
@@ -219,7 +219,7 @@ def test_debug_on_logs_the_exchange(build, caplog):
 
 def test_debug_off_logs_nothing(build, caplog):
     app, router, db_path = build(debug=False)
-    with caplog.at_level(logging.INFO, logger="tryout_laya.requests"):
+    with caplog.at_level(logging.INFO, logger="src.requests"):
         with TestClient(app) as client:
             client.post("/v1/systemone",
                         json=request_body(metadata={"clientId": "videosvc"}))
@@ -228,7 +228,7 @@ def test_debug_off_logs_nothing(build, caplog):
 
 def test_error_is_logged(build, caplog):
     app, router, db_path = build(debug=True)
-    with caplog.at_level(logging.INFO, logger="tryout_laya.requests"):
+    with caplog.at_level(logging.INFO, logger="src.requests"):
         with TestClient(app) as client:
             client.post("/v1/systemone", json=request_body(metadata={"timestamp": 1}))
     records = request_log_records(caplog)
@@ -241,7 +241,7 @@ def test_error_is_logged(build, caplog):
 
 def test_long_fields_are_truncated(build, caplog):
     app, router, db_path = build(debug=True, max_chars=10)
-    with caplog.at_level(logging.INFO, logger="tryout_laya.requests"):
+    with caplog.at_level(logging.INFO, logger="src.requests"):
         with TestClient(app) as client:
             client.post("/v1/systemone",
                         json=request_body(metadata={"clientId": "videosvc"}))
@@ -251,7 +251,7 @@ def test_long_fields_are_truncated(build, caplog):
 
 def test_health_is_never_observed(build, caplog):
     app, router, db_path = build(debug=True)
-    with caplog.at_level(logging.INFO, logger="tryout_laya.requests"):
+    with caplog.at_level(logging.INFO, logger="src.requests"):
         with TestClient(app) as client:
             response = client.get("/health")
     assert response.status_code == 200

@@ -19,7 +19,12 @@ dependencies = ["laya==0.3.20", "torch>=2.6,<2.7"]
 serve = ["laya[serve]==0.3.20"]
 
 [dependency-groups]
-dev = ["pytest>=8", "httpx>=0.27"]
+dev = [
+    "pytest>=8",
+    "httpx>=0.27",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.3",
+]
 
 # CUDA 12.4 wheels, the oldest CUDA 12 build available, which is what a driver
 # reporting 12040 supports. `explicit` keeps it out of the default resolution, so
@@ -42,6 +47,6 @@ cache-dir = ".uv-cache"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
-# The project is not an installed package, so the tests import tryout_laya from
+# The project is not an installed package, so the tests import src from
 # the project root.
 pythonpath = ["."]

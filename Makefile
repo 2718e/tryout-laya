@@ -27,13 +27,14 @@ export HF_HOME
 
 UV_FLAGS := --all-extras --group dev
 
-.PHONY: help install serve test fetch clean
+.PHONY: help install serve test eval fetch clean
 
 help:
 	@echo "install  resolve and install dependencies into .venv-agent-container"
 	@echo "fetch    download the checkpoints into $(HF_HOME)"
 	@echo "serve    run the HTTP server on http://$(HOST):$(PORT)"
 	@echo "test     pytest (the smoke test loads a checkpoint on first run)"
+	@echo "eval     analyse LAYA_REQUESTS_DB and graph probability by line position"
 	@echo "clean    drop the local model cache and uv cache"
 	@echo ""
 	@echo "Request logs: LAYA_DEBUG_REQUESTS=1 prints each request, and"
@@ -52,10 +53,13 @@ serve: install
 	LAYA_HOST=$(HOST) LAYA_PORT=$(PORT) LAYA_DEVICE=$(DEVICE) \
 	LAYA_MODELS=$(MODELS) LAYA_PRELOAD=$(PRELOAD) LAYA_THREADS=$(THREADS) \
 	LAYA_API_KEY=$(LAYA_API_KEY) \
-	$(UV) run python -m tryout_laya.server
+	$(UV) run python -m src.server
 
 test: install
 	$(UV) run pytest
+
+eval: install
+	$(UV) run python -m src.eval
 
 clean:
 	rm -rf .cache/huggingface .uv-cache
